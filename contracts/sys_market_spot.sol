@@ -369,7 +369,7 @@ contract SysMarketSpot is SysMarketSpotBase {
         adjustedAmount *= 10**14;
         adjustedPrice *= 10**12;
 
-        inputBalance = adjustedAmount * adjustedPrice / (1 ether);
+        inputBalance = (adjustedAmount.mul(adjustedPrice)) / (1 ether);
         require(inputBalance > 0);
     }
     
@@ -384,8 +384,8 @@ contract SysMarketSpot is SysMarketSpotBase {
         uint256 revenue = 0;
 
         if (makerChargeRatioBy10k_ > 0) {
-            revenue = _amount * makerChargeRatioBy10k_ / 10000;
-            marketRevenues_[_tokenAdr] += revenue;
+            revenue = (_amount.mul(makerChargeRatioBy10k_)) / 10000;
+            marketRevenues_[_tokenAdr] = marketRevenues_[_tokenAdr].add(revenue);
         } 
         transferFromMarketToUser(_tokenAdr, user, _amount - revenue);
 
@@ -465,22 +465,22 @@ contract SysMarketSpot is SysMarketSpotBase {
         (remainAmount, soldNos, profit) = MarketSpotPair(dexAdr).spotSellToken(userIdx, adjustedAmount, adjustedPrice, _loops);
 
         if (profit > 0) {
-            uint256 chargedFee = chargedFee = profit * takerChargeRatioBy10k_ / 10000;
-            marketRevenues_[_adrs[1]] += chargedFee;
+            uint256 chargedFee = chargedFee = (profit.mul(takerChargeRatioBy10k_)) / 10000;
+            marketRevenues_[_adrs[1]] = marketRevenues_[_adrs[1]].add(chargedFee);
             // spotFees_[dexAdr].priceFee_ += uint128(chargedFee);
 
             // transfer profit to user
-            transferFromMarketToUser(_adrs[1], msg.sender, profit - chargedFee);
+            transferFromMarketToUser(_adrs[1], msg.sender, profit.sub(chargedFee));
 
             emit SpotTaking(dexIndice_[dexAdr], userIdx, true, uint88(soldNos), uint80(profit * (1 ether) / soldNos), uint88(chargedFee), uint32(now));
         }
 
         if (remainAmount > 0) {
             // refund the rest of tokens
-            transferFromMarketToUser(_adrs[0], msg.sender, adjustedAmount - soldNos);
+            transferFromMarketToUser(_adrs[0], msg.sender, adjustedAmount.sub(soldNos));
         } else {
             // the remain selling are placed
-            uint256 delta = adjustedAmount - soldNos;
+            uint256 delta = adjustedAmount.sub(soldNos);
             if (delta > 0) {
                 updateUserWeightInfo(dexIndice_[dexAdr], userIdx, 0, 1, true, true, delta, adjustedPrice);
             }
@@ -515,21 +515,21 @@ contract SysMarketSpot is SysMarketSpotBase {
         (remainAmount, boughNos, payment) = MarketSpotPair(dexAdr).spotBuyToken(userIdx, adjustedAmount, adjustedPrice, _loops);
 
         if (boughNos > 0) {
-            uint256 chargedFee = boughNos * takerChargeRatioBy10k_ / 10000;
-            marketRevenues_[_adrs[0]] += chargedFee;
+            uint256 chargedFee = (boughNos.mul(takerChargeRatioBy10k_)) / 10000;
+            marketRevenues_[_adrs[0]] = marketRevenues_[_adrs[0]].add(chargedFee);
 
             // transfer tokens to user
-            transferFromMarketToUser(_adrs[0], msg.sender, boughNos - chargedFee);
+            transferFromMarketToUser(_adrs[0], msg.sender, boughNos.sub(chargedFee));
 
             emit SpotTaking(dexIndice_[dexAdr], userIdx, false, uint88(boughNos), uint80(payment * (1 ether) / boughNos), uint88(chargedFee), uint32(now));
         }    
 
         if (remainAmount > 0) {
             // refund the rest of pre-payment
-            transferFromMarketToUser(_adrs[1], msg.sender, inputBalance - payment);
+            transferFromMarketToUser(_adrs[1], msg.sender, inputBalance.sub(payment));
         } else {
             // the remain buying are placed
-            uint256 delta = adjustedAmount - boughNos;
+            uint256 delta = adjustedAmount.sub(boughNos);
             if (delta > 0) {
                 updateUserWeightInfo(dexIndice_[dexAdr], userIdx, 0, 1, false, true, delta, adjustedPrice);
             }
