@@ -480,9 +480,9 @@ contract SysMarketSpot is SysMarketSpotBase {
             transferFromMarketToUser(_adrs[0], msg.sender, adjustedAmount.sub(soldNos));
         } else {
             // the remain selling are placed
-            uint256 delta = adjustedAmount.sub(soldNos);
-            if (delta > 0) {
-                updateUserWeightInfo(dexIndice_[dexAdr], userIdx, 0, 1, true, true, delta, adjustedPrice);
+            remainAmount = adjustedAmount.sub(soldNos);
+            if (remainAmount > 0) {
+                updateUserWeightInfo(dexIndice_[dexAdr], userIdx, 0, 1, true, true, remainAmount, adjustedPrice);
             }
         }
     }
@@ -529,9 +529,9 @@ contract SysMarketSpot is SysMarketSpotBase {
             transferFromMarketToUser(_adrs[1], msg.sender, inputBalance.sub(payment));
         } else {
             // the remain buying are placed
-            uint256 delta = adjustedAmount.sub(boughNos);
-            if (delta > 0) {
-                updateUserWeightInfo(dexIndice_[dexAdr], userIdx, 0, 1, false, true, delta, adjustedPrice);
+            remainAmount = adjustedAmount.sub(boughNos);
+            if (remainAmount > 0) {
+                updateUserWeightInfo(dexIndice_[dexAdr], userIdx, 0, 1, false, true, remainAmount, adjustedPrice);
             }
         }
     }
